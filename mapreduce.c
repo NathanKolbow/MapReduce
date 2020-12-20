@@ -366,52 +366,6 @@ void MR_Run(int argc, char *argv[], Mapper map,
 
     // First we organize the files into shortest file first
     pthread_mutex_init(&filelist_lock, NULL);
-    // pthread_mutex_lock(&filelist_lock);
-    // HEAD = malloc(sizeof(struct file_node));
-
-    // for(int i = 1; i < argc; i++) {
-    //     FILE *cur = fopen(argv[i], "r");
-    //     if(cur == NULL) {
-    //         fprintf(stderr, "Could not open %s.\n", argv[i]);
-    //         exit(1);
-    //     }
-
-    //     fseek(cur, 0L, SEEK_END);
-    //     int cur_length = ftell(cur);
-
-    //     if(i == 1) {
-    //         HEAD->length = cur_length;
-    //         HEAD->filename = strdup(argv[i]);
-    //     } else {
-    //         if(cur_length <= HEAD->length) {
-    //             // new HEAD
-    //             struct file_node *head_copy = malloc(sizeof(struct file_node));
-    //             head_copy->length = HEAD->length;
-    //             head_copy->filename = HEAD->filename;
-    //             head_copy->next = HEAD->next;
-
-    //             HEAD->length = cur_length;
-    //             HEAD->filename = strdup(argv[i]);
-    //             HEAD->next = head_copy;
-    //         } else {
-    //             struct file_node *temp = HEAD;
-
-    //             while(temp->next != NULL && temp->next->length < cur_length)
-    //                 temp = temp->next;
-
-    //             // now, the new node should be inserted immediately after temp
-    //             struct file_node *new_node = malloc(sizeof(struct file_node));
-    //             new_node->length = cur_length;
-    //             new_node->filename = strdup(argv[i]);
-    //             new_node->next = temp->next;
-                
-    //             temp->next = new_node;
-    //         }
-    //     }
-
-    //     fclose(cur);
-    // }
-    // pthread_mutex_unlock(&filelist_lock);
     
     // the files are now sorted from shorter to longest
     // mappers will take files in a first come, first serve manner.
@@ -531,17 +485,6 @@ char * pop_next_file() {
     char *toRet = FILES[serving_file];
     serving_file--;
     return toRet;
-
-    // if(HEAD == NULL || HEAD->filename == NULL)
-    //     return NULL;
-
-    // char *ret = HEAD->filename;
-    // struct file_node *toFree = HEAD;
-
-    // HEAD = HEAD->next; // move it along
-    // free(toFree); // free off the no longer needed head
-
-    // return ret;
 }
 
 // type == 0 means mapper,
@@ -565,107 +508,3 @@ unsigned long MR_DefaultHashPartition(char *key, int num_partitions){
         hash = hash * 33 + c;
     return hash % num_partitions;
 }
-
-
-
-
-/*
-void Map1(char *file_name) {
-    FILE *fp = fopen(file_name, "r");
-
-    char *line = NULL;
-    size_t size = 0;
-    while (getline(&line, &size, fp) != -1) {
-        char *token, *dummy = line;
-        while ((token = strsep(&dummy, " \t\n\r")) != NULL) {
-            MR_EmitToCombiner(token, "1");
-        }
-    }
-    free(line);
-    fclose(fp);
-}
-
-void Combine1(char *key, CombineGetter get_next) {
-    int count = 0;
-    char *value;
-    while ((value = get_next(key)) != NULL) {
-        count ++; // Emmited Map values are "1"s
-    }
-    // Convert integer (count) to string (value)
-    value = (char*)malloc(10 * sizeof(char));
-    sprintf(value, "%d", count);
-
-    MR_EmitToReducer(key, value);
-    free(value);
-}
-
-void Reduce1(char *key, ReduceStateGetter get_state,
-            ReduceGetter get_next, int partition_number) {
-    char *state = get_state(key, partition_number);
-    int count = (state != NULL) ? atoi(state) : 0;
-
-    char *value = get_next(key, partition_number);
-    if (value != NULL) {
-        count += atoi(value);
-
-        // Convert integer (count) to string (value)
-        value = (char*)malloc(10 * sizeof(char));
-        sprintf(value, "%d", count);
-
-        MR_EmitReducerState(key, value, partition_number);
-        free(value);
-    }
-    else {
-        printf("[%d] Final val: %s %d\n", findMyself(1), key, count);
-    }
-}
-
-// functions for initial testing/debugging
-void map(char *file_name) {
-    for(int i = 0; i < 100; i++) {
-        char *key = malloc(15);
-        char *val = malloc(15);
-        sprintf(key, "KEY[%d]", i%10);
-        sprintf(val, "%d", i%5);
-
-        MR_EmitToCombiner(key, val);
-    }
-}
-
-void comb(char *key, CombineGetter get_next) {
-    char *val;
-    int count = 0;
-
-    while((val = get_next(key)) != NULL) {
-        count += atoi(val);
-    }
-
-    val = malloc(16);
-    sprintf(val, "%d", count);
-    MR_EmitToReducer(key, val);
-}
-
-void red(char *key, ReduceStateGetter get_state, ReduceGetter get_next, int partition_number) {
-    //
-}
-
-int main(int argc, char *argv[]) {
-    // int num = 100;
-
-    // struct hash_bucket *bucket = malloc(sizeof(struct hash_bucket));
-    // bucket->trees = malloc(sizeof(struct BST_node *) * num);
-    // for(int i = 0; i < num; i++)
-    //     bucket->trees[i] = NULL;
-
-    // printf("inserting\n");
-    // for(int i = 0; i < 100000; i++) {
-    //     if(i % 10000 == 0)
-    //         printf("%d\n", i);
-    //     HASH_insert(bucket, "a", "1", i % num);
-    // }
-
-    MR_Run(argc, argv, &Map1, 1, &Reduce1, 1, &Combine1, &MR_DefaultHashPartition);
-}
-
-
-*/
